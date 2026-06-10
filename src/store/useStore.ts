@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type UserRole = 'public' | 'donor' | 'ngo' | 'admin';
+export type UserRole = 'donor' | 'ngo' | 'admin';
 
 export interface NGO {
   id: string;
@@ -128,7 +128,7 @@ interface AppState {
 }
 
 export const useStore = create<AppState>((set, get) => ({
-  currentRole: 'public',
+  currentRole: 'donor',
   setRole: (role) => set({ currentRole: role }),
   
   followedNgos: ['ngo-2'], // Vidyoday followed by default

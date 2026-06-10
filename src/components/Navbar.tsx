@@ -32,8 +32,6 @@ export default function Navbar() {
       navigate('/ngo');
     } else if (role === 'admin') {
       navigate('/admin');
-    } else {
-      navigate('/');
     }
   };
 
@@ -86,7 +84,7 @@ export default function Navbar() {
             {/* Role Simulator Widget */}
             <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200/60">
               <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold px-2">Role:</span>
-              {(['public', 'donor', 'ngo', 'admin'] as UserRole[]).map((r) => (
+              {(['donor', 'ngo', 'admin'] as UserRole[]).map((r) => (
                 <button
                   key={r}
                   onClick={() => handleRoleChange(r)}
@@ -96,7 +94,7 @@ export default function Navbar() {
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  {r === 'donor' ? 'Donor' : r === 'ngo' ? 'NGO' : r === 'admin' ? 'Admin' : 'Public'}
+                  {r === 'donor' ? 'Donor' : r === 'ngo' ? 'NGO' : 'Admin'}
                 </button>
               ))}
             </div>
@@ -164,29 +162,20 @@ export default function Navbar() {
             </div>
 
             {/* User Profile Button / Workspace Portal */}
-            {currentRole !== 'public' ? (
-              <Link
-                to={currentRole === 'donor' ? '/donor' : currentRole === 'ngo' ? '/ngo' : '/admin'}
-                className="flex items-center space-x-2 pl-2 border-l border-slate-200"
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-400 to-indigo-500 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm">
-                  {currentRole.slice(0, 2)}
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-xs font-bold text-slate-800 leading-none">
-                    {currentRole === 'donor' ? 'Impact Portfolio' : currentRole === 'ngo' ? 'Vidyoday Admin' : 'Super Admin'}
-                  </span>
-                  <span className="text-[10px] text-slate-500 leading-none mt-1">Dashboard</span>
-                </div>
-              </Link>
-            ) : (
-              <Link
-                to="/login"
-                className="px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-sm"
-              >
-                Sign In
-              </Link>
-            )}
+            <Link
+              to={currentRole === 'donor' ? '/donor' : currentRole === 'ngo' ? '/ngo' : '/admin'}
+              className="flex items-center space-x-2 pl-2 border-l border-slate-200"
+            >
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-400 to-indigo-500 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm">
+                {currentRole.slice(0, 2)}
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-bold text-slate-800 leading-none">
+                  {currentRole === 'donor' ? 'Impact Portfolio' : currentRole === 'ngo' ? 'Vidyoday Admin' : 'Super Admin'}
+                </span>
+                <span className="text-[10px] text-slate-500 leading-none mt-1">Dashboard</span>
+              </div>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -236,8 +225,8 @@ export default function Navbar() {
               <span className="block px-3 text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-2">
                 Simulate Role View
               </span>
-              <div className="grid grid-cols-4 gap-1.5 px-3">
-                {(['public', 'donor', 'ngo', 'admin'] as UserRole[]).map((r) => (
+              <div className="grid grid-cols-3 gap-1.5 px-3">
+                {(['donor', 'ngo', 'admin'] as UserRole[]).map((r) => (
                   <button
                     key={r}
                     onClick={() => {
@@ -256,33 +245,21 @@ export default function Navbar() {
               </div>
             </div>
 
-            {currentRole !== 'public' ? (
-              <div className="border-t border-slate-100 pt-3 px-3">
-                <Link
-                  to={currentRole === 'donor' ? '/donor' : currentRole === 'ngo' ? '/ngo' : '/admin'}
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center space-x-3 bg-slate-50 p-2 rounded-xl border border-slate-100"
-                >
-                  <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-xs uppercase">
-                    {currentRole.slice(0, 2)}
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-slate-800 capitalize">{currentRole} Dashboard</div>
-                    <div className="text-[9px] text-slate-400">View workspace settings</div>
-                  </div>
-                </Link>
-              </div>
-            ) : (
-              <div className="px-3 pt-3">
-                <Link
-                  to="/login"
-                  onClick={() => setIsOpen(false)}
-                  className="block w-full py-2.5 text-center text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl"
-                >
-                  Sign In
-                </Link>
-              </div>
-            )}
+            <div className="border-t border-slate-100 pt-3 px-3">
+              <Link
+                to={currentRole === 'donor' ? '/donor' : currentRole === 'ngo' ? '/ngo' : '/admin'}
+                onClick={() => setIsOpen(false)}
+                className="flex items-center space-x-3 bg-slate-50 p-2 rounded-xl border border-slate-100"
+              >
+                <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-xs uppercase">
+                  {currentRole.slice(0, 2)}
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-800 capitalize">{currentRole} Dashboard</div>
+                  <div className="text-[9px] text-slate-400">View workspace settings</div>
+                </div>
+              </Link>
+            </div>
           </div>
         </div>
       )}
