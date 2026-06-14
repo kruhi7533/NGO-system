@@ -15,11 +15,11 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CampaignManager() {
-  const { campaigns, addCampaign } = useStore();
+  const { campaigns, addCampaign, activeNgoId } = useStore();
 
   const myCampaigns = useMemo(() => 
-    campaigns.filter(c => c.ngoId === 'ngo-2'),
-    [campaigns]
+    campaigns.filter(c => c.ngoId === activeNgoId),
+    [campaigns, activeNgoId]
   );
 
   const [showWizard, setShowWizard] = useState(false);

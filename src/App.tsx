@@ -2,10 +2,14 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import AIAssistant from './components/AIAssistant';
 
 // Public pages
 import Home from './pages/public/Home';
 import Explore from './pages/public/Explore';
+import Stories from './pages/public/Stories';
+import GetStarted from './pages/public/GetStarted';
+import NGORegistration from './pages/public/NGORegistration';
 import NGOProfile from './pages/public/NGOProfile';
 import CampaignDetails from './pages/public/CampaignDetails';
 import ImpactFeed from './pages/public/ImpactFeed';
@@ -36,6 +40,9 @@ function App() {
             {/* Public Routing */}
             <Route path="/" element={<Home />} />
             <Route path="/explore" element={<Explore />} />
+            <Route path="/stories" element={<Stories />} />
+            <Route path="/get-started" element={<GetStarted />} />
+            <Route path="/register-ngo" element={<NGORegistration />} />
             <Route path="/ngo/:id" element={<NGOProfile />} />
             <Route path="/campaign/:id" element={<CampaignDetails />} />
             <Route path="/feed" element={<ImpactFeed />} />
@@ -57,6 +64,9 @@ function App() {
 
         {/* Brand Footer */}
         <Footer />
+
+        {/* Global AI Assistant Floating Toggle */}
+        <AIAssistant />
       </div>
     </Router>
   );

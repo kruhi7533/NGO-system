@@ -5,14 +5,8 @@ import {
   ShieldCheck, 
   FileText, 
   CheckCircle, 
-  XCircle, 
-  Users, 
   MapPin, 
-  HelpCircle,
-  Clock,
   Sparkles,
-  Info,
-  Calendar,
   AlertTriangle,
   History
 } from 'lucide-react';
@@ -57,16 +51,16 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-screen space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-screen space-y-6">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/50 shadow-premium">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/50 shadow-premium">
         <div>
           <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Workspace</span>
-          <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-900 mt-1">
+          <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900 mt-1">
             Auditing & Compliance Center
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5 font-medium">Account Access: Lead Auditor (Super Admin)</p>
+          <p className="text-xs text-slate-450 mt-0.5 font-medium">Account Access: Lead Auditor (Super Admin)</p>
         </div>
 
         <div className="flex items-center gap-2 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200/80 px-4 py-2.5 rounded-xl shadow-sm">

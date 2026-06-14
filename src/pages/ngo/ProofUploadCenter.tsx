@@ -15,14 +15,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ProofUploadCenter() {
   const navigate = useNavigate();
-  const { campaigns, uploadProof } = useStore();
+  const { campaigns, uploadProof, activeNgoId } = useStore();
 
   const myCampaigns = useMemo(() => 
-    campaigns.filter(c => c.ngoId === 'ngo-2'),
-    [campaigns]
+    campaigns.filter(c => c.ngoId === activeNgoId),
+    [campaigns, activeNgoId]
   );
 
-  const [selectedCampaignId, setSelectedCampaignId] = useState(myCampaigns[0]?.id || '');
+  const [selectedCampaignId, setSelectedCampaignId] = useState('');
+
+  React.useEffect(() => {
+    if (myCampaigns.length > 0 && !selectedCampaignId) {
+      setSelectedCampaignId(myCampaigns[0].id);
+    }
+  }, [myCampaigns, selectedCampaignId]);
   const [stageName, setStageName] = useState('Resources Purchased');
   const [description, setDescription] = useState('');
   const [evidenceName, setEvidenceName] = useState('');

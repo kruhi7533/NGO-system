@@ -73,7 +73,7 @@ export default function Footer() {
           <div className="flex space-x-6 mt-4 md:mt-0">
             <span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span>
             <span className="hover:text-white cursor-pointer transition-colors">Terms of Service</span>
-            <span className="hover:text-white cursor-pointer transition-colors">Security Disclosure</span>
+            <Link to="/admin" className="hover:text-white transition-colors">Auditor Access</Link>
           </div>
         </div>
       </div>

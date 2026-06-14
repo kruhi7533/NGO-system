@@ -16,6 +16,7 @@ export interface NGO {
   trustScore: number;
   transparencyScore: number;
   impactScore: number;
+  verificationScore: number;
   followersCount: number;
   beneficiariesReached: number;
   documents: {
@@ -25,6 +26,33 @@ export interface NGO {
     fcra: 'Approved' | 'Pending' | 'Not Submitted';
   };
   gallery: string[];
+  
+  // Imparency 3.0 Additional Data Model
+  campaignSuccessRate: number;
+  projectsCompleted: number;
+  yearsActive: number;
+  trustBreakdown: {
+    documentsVerified: number;
+    auditQuality: number;
+    proofFrequency: number;
+    donorSatisfaction: number;
+    campaignCompletion: number;
+    impactVerification: number;
+  };
+  whyTrust: {
+    panVerified: boolean;
+    g80Verified: boolean;
+    a12Verified: boolean;
+    fcraVerified: boolean;
+    lastAuditDate: string;
+    complianceStatus: 'Excellent' | 'Good' | 'Pending';
+    riskRating: 'Low' | 'Medium' | 'High';
+    aiVerificationStatus: 'Active' | 'Inactive';
+  };
+  supportersCount: number;
+  recentDonors: string[];
+  communitySize: number;
+  email?: string;
 }
 
 export interface Campaign {
@@ -38,9 +66,9 @@ export interface Campaign {
   category: string;
   banner: string;
   expectedImpact: {
-    bracket1: string; // low amount
-    bracket2: string; // medium amount
-    bracket3: string; // high amount
+    bracket1: string;
+    bracket2: string;
+    bracket3: string;
   };
   beneficiariesCount: number;
   active: boolean;
@@ -79,7 +107,7 @@ export interface FeedPost {
   ngoId: string;
   ngoName: string;
   ngoLogo: string;
-  type: 'milestone' | 'allocation' | 'purchase' | 'evidence' | 'story';
+  type: 'milestone' | 'allocation' | 'purchase' | 'evidence' | 'story' | 'audit';
   title: string;
   content: string;
   timestamp: string;
@@ -94,6 +122,8 @@ export interface FeedPost {
   likes: number;
   comments: number;
   hasLiked?: boolean;
+  beforeImage?: string;
+  afterImage?: string;
 }
 
 export interface AppNotification {
@@ -108,6 +138,10 @@ export interface AppNotification {
 interface AppState {
   currentRole: UserRole;
   setRole: (role: UserRole) => void;
+  logout: () => void;
+  
+  activeNgoId: string;
+  setActiveNgoId: (id: string) => void;
   
   ngos: NGO[];
   campaigns: Campaign[];
@@ -125,11 +159,32 @@ interface AppState {
   addCampaign: (campaign: Omit<Campaign, 'id' | 'raisedAmount' | 'ngoId' | 'ngoName'>) => void;
   addFeedPost: (post: Omit<FeedPost, 'id' | 'likes' | 'comments' | 'timestamp' | 'ngoLogo'>) => void;
   markNotificationsAsRead: () => void;
+  registerNgo: (ngoData: {
+    name: string;
+    regNumber: string;
+    email: string;
+    phone: string;
+    website: string;
+    location: string;
+    mission: string;
+    description: string;
+    category: string;
+    logo: string;
+    coverImage: string;
+    panUploaded: boolean;
+    g80Uploaded: boolean;
+    a12Uploaded: boolean;
+    fcraUploaded: boolean;
+  }) => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
   currentRole: 'public',
   setRole: (role) => set({ currentRole: role }),
+  logout: () => set({ currentRole: 'public' }),
+  
+  activeNgoId: 'ngo-2',
+  setActiveNgoId: (id) => set({ activeNgoId: id }),
   
   followedNgos: ['ngo-2'], // Vidyoday followed by default
   
@@ -175,6 +230,7 @@ export const useStore = create<AppState>((set, get) => ({
       trustScore: 94,
       transparencyScore: 96,
       impactScore: 92,
+      verificationScore: 95,
       followersCount: 1240,
       beneficiariesReached: 250000,
       documents: {
@@ -187,7 +243,32 @@ export const useStore = create<AppState>((set, get) => ({
         'https://images.unsplash.com/photo-1579684389782-64d84b5e901a?auto=format&fit=crop&q=80&w=300',
         'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=300',
         'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=300',
-      ]
+      ],
+      campaignSuccessRate: 94,
+      projectsCompleted: 24,
+      yearsActive: 9,
+      trustBreakdown: {
+        documentsVerified: 95,
+        auditQuality: 96,
+        proofFrequency: 93,
+        donorSatisfaction: 94,
+        campaignCompletion: 92,
+        impactVerification: 90
+      },
+      whyTrust: {
+        panVerified: true,
+        g80Verified: true,
+        a12Verified: true,
+        fcraVerified: true,
+        lastAuditDate: '2026-05-15',
+        complianceStatus: 'Excellent',
+        riskRating: 'Low',
+        aiVerificationStatus: 'Active'
+      },
+      supportersCount: 920,
+      recentDonors: ['Amit Sharma', 'Pooja Patel', 'Rohan Das'],
+      communitySize: 12500,
+      email: 'sanjeevani@imparency.org'
     },
     {
       id: 'ngo-2',
@@ -203,6 +284,7 @@ export const useStore = create<AppState>((set, get) => ({
       trustScore: 98,
       transparencyScore: 99,
       impactScore: 97,
+      verificationScore: 98,
       followersCount: 3450,
       beneficiariesReached: 12000,
       documents: {
@@ -215,7 +297,32 @@ export const useStore = create<AppState>((set, get) => ({
         'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=300',
         'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=300',
         'https://images.unsplash.com/photo-1577896851231-70ee18881754?auto=format&fit=crop&q=80&w=300',
-      ]
+      ],
+      campaignSuccessRate: 98,
+      projectsCompleted: 32,
+      yearsActive: 8,
+      trustBreakdown: {
+        documentsVerified: 98,
+        auditQuality: 99,
+        proofFrequency: 97,
+        donorSatisfaction: 98,
+        campaignCompletion: 99,
+        impactVerification: 96
+      },
+      whyTrust: {
+        panVerified: true,
+        g80Verified: true,
+        a12Verified: true,
+        fcraVerified: true,
+        lastAuditDate: '2026-06-01',
+        complianceStatus: 'Excellent',
+        riskRating: 'Low',
+        aiVerificationStatus: 'Active'
+      },
+      supportersCount: 1840,
+      recentDonors: ['Vikram Sen', 'Ananya Roy', 'Kabir Mehta'],
+      communitySize: 24000,
+      email: 'ngo@imparency.org'
     },
     {
       id: 'ngo-3',
@@ -231,6 +338,7 @@ export const useStore = create<AppState>((set, get) => ({
       trustScore: 89,
       transparencyScore: 91,
       impactScore: 87,
+      verificationScore: 88,
       followersCount: 890,
       beneficiariesReached: 45000,
       documents: {
@@ -243,7 +351,32 @@ export const useStore = create<AppState>((set, get) => ({
         'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=300',
         'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=300',
         'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=300',
-      ]
+      ],
+      campaignSuccessRate: 88,
+      projectsCompleted: 14,
+      yearsActive: 7,
+      trustBreakdown: {
+        documentsVerified: 88,
+        auditQuality: 91,
+        proofFrequency: 90,
+        donorSatisfaction: 89,
+        campaignCompletion: 87,
+        impactVerification: 85
+      },
+      whyTrust: {
+        panVerified: true,
+        g80Verified: true,
+        a12Verified: true,
+        fcraVerified: false,
+        lastAuditDate: '2026-04-20',
+        complianceStatus: 'Good',
+        riskRating: 'Low',
+        aiVerificationStatus: 'Active'
+      },
+      supportersCount: 450,
+      recentDonors: ['Sneha Nair', 'Aditya Rao', 'Meera Iyer'],
+      communitySize: 6800,
+      email: 'greencanopy@imparency.org'
     },
     {
       id: 'ngo-4',
@@ -255,22 +388,48 @@ export const useStore = create<AppState>((set, get) => ({
       story: 'Paws & Tails shelter operates in the suburbs of Mumbai. We host a permanent sanctuary for disabled and blind animals and coordinate sterilization and rabies vaccination drives for community dogs and cats.',
       category: 'Animal Welfare',
       location: 'Mumbai, India',
-      verifiedStatus: false, // Default is false, needs document approval
+      verifiedStatus: false,
       trustScore: 68,
       transparencyScore: 72,
       impactScore: 65,
+      verificationScore: 70,
       followersCount: 420,
       beneficiariesReached: 3800,
       documents: {
         pan: 'Approved',
-        g80: 'Pending', // Admin can approve this!
+        g80: 'Pending',
         a12: 'Not Submitted',
         fcra: 'Not Submitted',
       },
       gallery: [
         'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=300',
         'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&q=80&w=300',
-      ]
+      ],
+      campaignSuccessRate: 72,
+      projectsCompleted: 8,
+      yearsActive: 4,
+      trustBreakdown: {
+        documentsVerified: 70,
+        auditQuality: 72,
+        proofFrequency: 75,
+        donorSatisfaction: 72,
+        campaignCompletion: 70,
+        impactVerification: 66
+      },
+      whyTrust: {
+        panVerified: true,
+        g80Verified: false,
+        a12Verified: false,
+        fcraVerified: false,
+        lastAuditDate: '2026-02-10',
+        complianceStatus: 'Pending',
+        riskRating: 'Medium',
+        aiVerificationStatus: 'Inactive'
+      },
+      supportersCount: 280,
+      recentDonors: ['Preeti Vyas', 'Arjun Kapoor', 'Siddharth Malhotra'],
+      communitySize: 1800,
+      email: 'pawstails@imparency.org'
     }
   ],
 
@@ -656,12 +815,33 @@ export const useStore = create<AppState>((set, get) => ({
         // Recalculate scores based on document approvals
         const approvedCount = Object.values(updatedDocs).filter(v => v === 'Approved').length;
         const baseScore = 60 + approvedCount * 10;
+        
+        const updatedWhyTrust = {
+          ...n.whyTrust,
+          panVerified: updatedDocs.pan === 'Approved',
+          g80Verified: updatedDocs.g80 === 'Approved',
+          a12Verified: updatedDocs.a12 === 'Approved',
+          fcraVerified: updatedDocs.fcra === 'Approved',
+          complianceStatus: (approvedCount >= 3 ? 'Excellent' : 'Good') as any,
+          riskRating: (approvedCount >= 3 ? 'Low' : 'Medium') as any,
+          aiVerificationStatus: (approvedCount >= 3 ? 'Active' : 'Inactive') as any,
+          lastAuditDate: status === 'Approved' ? new Date().toISOString().split('T')[0] : n.whyTrust.lastAuditDate
+        };
+
+        const updatedTrustBreakdown = {
+          ...n.trustBreakdown,
+          documentsVerified: Math.round((approvedCount / 4) * 100),
+          auditQuality: approvedCount > 0 ? 80 + approvedCount * 4 : 50,
+        };
+
         return {
           ...n,
           documents: updatedDocs,
           verifiedStatus: approvedCount >= 3,
           trustScore: Math.min(99, baseScore + 5),
           transparencyScore: Math.min(99, baseScore + 8),
+          trustBreakdown: updatedTrustBreakdown,
+          whyTrust: updatedWhyTrust
         };
       }
       return n;
@@ -775,12 +955,12 @@ export const useStore = create<AppState>((set, get) => ({
   }),
 
   addCampaign: (campaignData) => set((state) => {
-    // Simulating NGO adding their own campaign
+    const myNgo = state.ngos.find(n => n.id === state.activeNgoId) || state.ngos.find(n => n.id === 'ngo-2')!;
     const newCampaign: Campaign = {
       ...campaignData,
       id: `c-${Date.now()}`,
-      ngoId: 'ngo-2', // Vidyoday
-      ngoName: 'Vidyoday Foundation',
+      ngoId: myNgo.id,
+      ngoName: myNgo.name,
       raisedAmount: 0,
       active: true,
       trustIndicators: ['Verified NGO', 'Zero Fee Direct Route', 'Timeline Tracked']
@@ -808,5 +988,73 @@ export const useStore = create<AppState>((set, get) => ({
 
   markNotificationsAsRead: () => set((state) => ({
     notifications: state.notifications.map(n => ({ ...n, read: true }))
-  }))
+  })),
+
+  registerNgo: (ngoData) => set((state) => {
+    const newNgoId = `ngo-${Date.now()}`;
+    const newNgo: NGO = {
+      id: newNgoId,
+      name: ngoData.name,
+      logo: ngoData.logo || 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&q=80&w=120',
+      banner: ngoData.coverImage || 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800',
+      tagline: ngoData.mission.substring(0, 60) + '...',
+      mission: ngoData.mission,
+      story: ngoData.description,
+      category: ngoData.category,
+      location: ngoData.location,
+      verifiedStatus: false,
+      trustScore: 60,
+      transparencyScore: 50,
+      impactScore: 70,
+      verificationScore: 50,
+      followersCount: 0,
+      beneficiariesReached: 0,
+      documents: {
+        pan: ngoData.panUploaded ? 'Pending' : 'Not Submitted',
+        g80: ngoData.g80Uploaded ? 'Pending' : 'Not Submitted',
+        a12: ngoData.a12Uploaded ? 'Pending' : 'Not Submitted',
+        fcra: ngoData.fcraUploaded ? 'Pending' : 'Not Submitted',
+      },
+      gallery: [],
+      campaignSuccessRate: 0,
+      projectsCompleted: 0,
+      yearsActive: 1,
+      trustBreakdown: {
+        documentsVerified: 0,
+        auditQuality: 50,
+        proofFrequency: 0,
+        donorSatisfaction: 0,
+        campaignCompletion: 0,
+        impactVerification: 0
+      },
+      whyTrust: {
+        panVerified: false,
+        g80Verified: false,
+        a12Verified: false,
+        fcraVerified: false,
+        lastAuditDate: 'N/A',
+        complianceStatus: 'Pending',
+        riskRating: 'Medium',
+        aiVerificationStatus: 'Inactive'
+      },
+      supportersCount: 0,
+      recentDonors: [],
+      communitySize: 0,
+      email: ngoData.email
+    };
+
+    const newNotification: AppNotification = {
+      id: `n-${Date.now()}`,
+      title: 'New NGO Application 📝',
+      description: `Application for "${ngoData.name}" has been received and is waiting for compliance review.`,
+      timestamp: 'Just now',
+      type: 'verification',
+      read: false,
+    };
+
+    return {
+      ngos: [...state.ngos, newNgo],
+      notifications: [newNotification, ...state.notifications]
+    };
+  })
 }));
