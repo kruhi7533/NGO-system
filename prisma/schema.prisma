@@ -1,0 +1,174 @@
+// Prisma schema for NGO-system
+// Database: Neon PostgreSQL
+// Auth: Better Auth (generates user, session, account, verification tables)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  DONOR
+  NGO
+  ADMIN
+}
+
+enum NgoStatus {
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum AuditAction {
+  SIGNUP
+  LOGIN
+  LOGOUT
+  EMAIL_VERIFIED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_COMPLETED
+  NGO_SUBMITTED
+  NGO_APPROVED
+  NGO_REJECTED
+  ROLE_CHANGED
+  PROFILE_UPDATED
+  SESSION_ANOMALY
+}
+
+// ─── Better Auth managed tables (auto-generated, included here for reference) ─
+// Run: npx @better-auth/cli generate
+// to merge Better Auth's user/session/account/verification models in.
+
+// ─── Custom tables ────────────────────────────────────────────────────────────
+
+/// One row per registered user. id matches better-auth user.id.
+
+model Profile {
+  id          String  @id // = better-auth user.id
+  email       String  @unique
+  role        Role    @default(DONOR)
+  displayName String?
+  avatarUrl   String?
+
+  // Brute-force protection (managed server-side)
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ngoRegistration NgoRegistration?
+  auditLogs       AuditLog[]
+
+  @@map("profiles")
+}
+
+/// NGO registration record. Created atomically with Profile during NGO signup.
+/// status starts PENDING, admin moves it to VERIFIED before NGO can access dashboard.
+
+model NgoRegistration {
+  id      String  @id @default(cuid())
+  userId  String  @unique
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  orgName            String
+  registrationNumber String?
+  phone              String?
+  website            String?
+  state              String?
+  city               String?
+  category           String?
+  mission            String?
+
+  status          NgoStatus @default(PENDING)
+  rejectionReason String?
+
+  submittedAt DateTime  @default(now())
+  reviewedAt  DateTime?
+  reviewedBy  String? // admin Profile.id
+
+  @@map("ngo_registrations")
+}
+
+/// Append-only audit log. NEVER run UPDATE or DELETE on this table.
+/// Enforced by: DB trigger + application DB user privileges (INSERT+SELECT only).
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String?
+  profile   Profile?    @relation(fields: [userId], references: [id])
+  action    AuditAction
+  ipAddress String?
+  metadata  Json? // { userAgent, endpoint, success, extra }
+  createdAt DateTime    @default(now())
+
+  @@map("audit_logs")
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
