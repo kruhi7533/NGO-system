@@ -1,27 +1,34 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import {
-  Heart,
-  Bell,
-  Menu,
-  X,
-  LogOut
+import { useAuth } from '../hooks/useAuth';
+import { 
+  Heart, 
+  Bell, 
+  Menu, 
+  X, 
+  ShieldCheck, 
+  User, 
+  LogOut,
+  Sparkles,
+  Inbox
 } from 'lucide-react';
 
 export default function Navbar() {
-  const { currentRole, logout, notifications, markNotificationsAsRead } = useStore();
+  const { currentRole, notifications, markNotificationsAsRead } = useStore();
+  const { user, signOut } = useAuth();
+  const isAuthenticated = !!user;
   const [isOpen, setIsOpen] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  
+
   const location = useLocation();
   const navigate = useNavigate();
 
   const unreadNotifCount = notifications.filter(n => !n.read).length;
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     setShowProfileMenu(false);
     navigate('/');
   };
@@ -29,24 +36,24 @@ export default function Navbar() {
   // Dynamic Navigation Links based on role
   const getNavLinks = () => {
     switch (currentRole) {
-      case 'donor':
+      case 'DONOR':
         return [
           { label: 'Explore NGOs', path: '/explore' },
           { label: 'Impact Feed', path: '/feed' },
           { label: 'My Impact', path: '/donor' },
         ];
-      case 'ngo':
+      case 'NGO':
         return [
           { label: 'Dashboard', path: '/ngo' },
           { label: 'Campaigns', path: '/ngo/campaign-manager' },
           { label: 'Impact Feed', path: '/feed' },
         ];
-      case 'admin':
+      case 'ADMIN':
         return [
           { label: 'Auditing Console', path: '/admin' },
           { label: 'Impact Feed', path: '/feed' },
         ];
-      default: // public
+      default:
         return [
           { label: 'Home', path: '/' },
           { label: 'Explore NGOs', path: '/explore' },
@@ -73,9 +80,9 @@ export default function Navbar() {
               <span className="font-display font-extrabold text-lg tracking-tight text-slate-900">
                 IMPARENCY
               </span>
-              {currentRole !== 'public' && (
+              {isAuthenticated && (
                 <span className="text-[9px] bg-slate-900 text-slate-200 px-1.5 py-0.5 rounded capitalize font-mono font-semibold">
-                  {currentRole}
+                  {currentRole.toLowerCase()}
                 </span>
               )}
             </Link>
@@ -102,7 +109,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-4">
             
             {/* Notifications */}
-            {currentRole !== 'public' && (
+            {isAuthenticated && (
               <div className="relative">
                 <button
                   onClick={() => {
@@ -157,7 +164,7 @@ export default function Navbar() {
             )}
 
             {/* Profile Avatar / Login CTA */}
-            {currentRole !== 'public' ? (
+            {isAuthenticated ? (
               <div className="relative">
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -168,7 +175,7 @@ export default function Navbar() {
                   </div>
                   <div className="flex flex-col text-left">
                     <span className="text-[11px] font-bold text-slate-800 leading-none">
-                      {currentRole === 'donor' ? 'Donor Account' : currentRole === 'ngo' ? 'Vidyoday Rep' : 'Admin'}
+                      {currentRole === 'DONOR' ? 'Donor Account' : currentRole === 'NGO' ? 'NGO Account' : 'Admin'}
                     </span>
                     <span className="text-[9px] text-slate-400 leading-none mt-1">Workspace</span>
                   </div>
@@ -180,7 +187,7 @@ export default function Navbar() {
                     <div className="px-4 py-2 border-b border-slate-50">
                       <span className="block text-[10px] text-slate-400 font-semibold uppercase">Active Profile</span>
                       <span className="block text-xs font-bold text-slate-800 mt-0.5">
-                        {currentRole === 'donor' ? 'Sponsor Account' : currentRole === 'ngo' ? 'Vidyoday Rep' : 'Platform Auditor'}
+                        {currentRole === 'DONOR' ? 'Sponsor Account' : currentRole === 'NGO' ? 'NGO Dashboard' : 'Platform Auditor'}
                       </span>
                     </div>
                     <button
@@ -214,7 +221,7 @@ export default function Navbar() {
 
           {/* Mobile Menu Trigger */}
           <div className="flex items-center md:hidden space-x-2">
-            {currentRole !== 'public' && (
+            {isAuthenticated && (
               <button
                 onClick={() => {
                   setShowNotif(!showNotif);
@@ -259,14 +266,14 @@ export default function Navbar() {
             ))}
 
             <div className="border-t border-slate-100 my-3 pt-3">
-              {currentRole !== 'public' ? (
+              {isAuthenticated ? (
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                     <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-xs uppercase">
                       {currentRole.slice(0, 2)}
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-slate-800 capitalize">{currentRole} Account</div>
+                      <div className="text-xs font-bold text-slate-800 capitalize">{currentRole.toLowerCase()} Account</div>
                       <div className="text-[9px] text-slate-400">Workspace Active</div>
                     </div>
                   </div>

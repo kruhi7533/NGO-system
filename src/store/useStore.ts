@@ -1,6 +1,7 @@
 import { create } from 'zustand';
+import type { AuthUser, UserProfile } from '../types/auth';
 
-export type UserRole = 'public' | 'donor' | 'ngo' | 'admin';
+export type UserRole = 'DONOR' | 'NGO' | 'ADMIN';
 
 export interface NGO {
   id: string;
@@ -139,6 +140,11 @@ interface AppState {
   currentRole: UserRole;
   setRole: (role: UserRole) => void;
   logout: () => void;
+
+  // Real auth state (populated by useAuth hook after sign-in)
+  authUser: AuthUser | null;
+  userProfile: UserProfile | null;
+  setAuthUser: (user: AuthUser | null, profile: UserProfile | null) => void;
   
   activeNgoId: string;
   setActiveNgoId: (id: string) => void;
@@ -179,9 +185,13 @@ interface AppState {
 }
 
 export const useStore = create<AppState>((set, get) => ({
-  currentRole: 'donor',
+  currentRole: 'DONOR',
   setRole: (role) => set({ currentRole: role }),
-  logout: () => set({ currentRole: 'public' }),
+  logout: () => set({ currentRole: 'DONOR', authUser: null, userProfile: null }),
+
+  authUser: null,
+  userProfile: null,
+  setAuthUser: (user, profile) => set({ authUser: user, userProfile: profile }),
   
   activeNgoId: 'ngo-2',
   setActiveNgoId: (id) => set({ activeNgoId: id }),

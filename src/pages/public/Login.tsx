@@ -3,11 +3,19 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useStore, UserRole } from '../../store/useStore';
 import { ShieldCheck, Heart, Building, ShieldAlert, Key, Mail, ArrowRight, X, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  authClient,
+  fetchProfile,
+  reportLoginFailure,
+  reportLoginSuccess,
+  checkLockout,
+  roleToPath,
+} from '../../lib/authClient';
 
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { setRole, setActiveNgoId } = useStore();
+  const { setRole } = useStore();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,81 +23,98 @@ export default function Login() {
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage('');
 
-    setTimeout(() => {
-      let role: UserRole = 'donor';
-      const cleanEmail = email.trim().toLowerCase();
-      
-      // Check if email matches any registered NGO in the store
-      const registeredNgos = useStore.getState().ngos;
-      const matchedNgo = registeredNgos.find(n => n.email?.toLowerCase() === cleanEmail);
+    const cleanEmail = email.trim().toLowerCase();
 
-      if (cleanEmail === 'admin@imparency.org' || cleanEmail.includes('admin')) {
-        role = 'admin';
-      } else if (matchedNgo || cleanEmail === 'ngo@imparency.org' || cleanEmail.includes('ngo') || cleanEmail.includes('partner') || cleanEmail.includes('foundation') || cleanEmail.includes('trust')) {
-        role = 'ngo';
-        if (matchedNgo) {
-          setActiveNgoId(matchedNgo.id);
-        } else {
-          setActiveNgoId('ngo-2'); // Default to Vidyoday Foundation
-        }
-      } else {
-        role = 'donor';
-      }
-
-      setRole(role);
+    // Check account lockout before attempting sign-in
+    const locked = await checkLockout(cleanEmail);
+    if (locked) {
+      setErrorMessage('Too many failed attempts. Please try again in 15 minutes.');
       setIsLoading(false);
-      
-      if (role === 'donor') {
-        navigate('/donor');
-      } else if (role === 'ngo') {
-        navigate('/ngo');
-      } else if (role === 'admin') {
-        navigate('/admin');
-      }
-    }, 1000);
+      return;
+    }
+
+    const { error } = await authClient.signIn.email({
+      email: cleanEmail,
+      password,
+    });
+
+    if (error) {
+      await reportLoginFailure(cleanEmail);
+      // Always show generic error — never reveal if email exists
+      setErrorMessage('Invalid email or password.');
+      setIsLoading(false);
+      return;
+    }
+
+    // Login succeeded — reset lockout counters and write audit log
+    await reportLoginSuccess();
+
+    const profile = await fetchProfile();
+    if (!profile) {
+      setErrorMessage('Login succeeded but profile could not be loaded. Please try again.');
+      setIsLoading(false);
+      return;
+    }
+
+    setRole(profile.role as UserRole);
+    setIsLoading(false);
+    navigate(roleToPath[profile.role] ?? '/');
   };
 
-  const handleQuickLogin = (role: UserRole) => {
+  // Demo quick-login: signs in with pre-seeded demo credentials
+  // (these accounts must exist in the DB — seeded during setup)
+  const handleQuickLogin = async (role: UserRole) => {
     setIsLoading(true);
     setShowDemoModal(false);
-    setTimeout(() => {
-      setRole(role);
-      if (role === 'ngo') {
-        setActiveNgoId('ngo-2');
-      }
+
+    const demoCredentials: Record<UserRole, { email: string; password: string }> = {
+      DONOR: { email: 'donor@demo.imparency.org', password: 'Demo@1234!' },
+      NGO:   { email: 'ngo@demo.imparency.org',   password: 'Demo@1234!' },
+      ADMIN: { email: 'admin@demo.imparency.org',  password: 'Demo@1234!' },
+    };
+
+    const creds = demoCredentials[role];
+    if (!creds) { setIsLoading(false); return; }
+
+    const { error } = await authClient.signIn.email(creds);
+    if (error) {
+      setErrorMessage('Demo account sign-in failed. Make sure demo accounts are seeded.');
       setIsLoading(false);
-      if (role === 'donor') navigate('/donor');
-      else if (role === 'ngo') navigate('/ngo');
-      else if (role === 'admin') navigate('/admin');
-    }, 800);
+      return;
+    }
+
+    const profile = await fetchProfile();
+    if (profile) setRole(profile.role as UserRole);
+    setIsLoading(false);
+    navigate(roleToPath[role] ?? '/');
   };
 
   const demoAccounts = [
     {
-      role: 'donor' as UserRole,
+      role: 'DONOR' as UserRole,
       title: 'Demo Donor Account',
-      email: 'donor@imparency.org',
+      email: 'donor@demo.imparency.org',
       desc: 'Trace personal donations, review taxes, track ledger updates.',
       icon: Heart,
       color: 'text-emerald-600 bg-emerald-50 border-emerald-100'
     },
     {
-      role: 'ngo' as UserRole,
+      role: 'NGO' as UserRole,
       title: 'Demo NGO Account',
-      email: 'ngo@imparency.org',
+      email: 'ngo@demo.imparency.org',
       desc: 'Launch fundraising, upload receipts, log updates, view growth.',
       icon: Building,
       color: 'text-indigo-600 bg-indigo-50 border-indigo-100'
     },
     {
-      role: 'admin' as UserRole,
+      role: 'ADMIN' as UserRole,
       title: 'Demo Admin Account',
-      email: 'admin@imparency.org',
+      email: 'admin@demo.imparency.org',
       desc: 'Recalculate trust ratings, approve compliance docs, check logs.',
       icon: ShieldAlert,
       color: 'text-amber-600 bg-amber-50 border-amber-100'

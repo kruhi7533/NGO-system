@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useStore } from '../../store/useStore';
 import { Building, UploadCloud, CheckCircle2, AlertCircle, ArrowLeft, ArrowRight, ShieldCheck, FileText, Image as ImageIcon, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createNgoRegistration } from '../../lib/authClient';
 
 export default function NGORegistration() {
   const navigate = useNavigate();
-  const { registerNgo, setRole } = useStore();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     regNumber: '',
     email: '',
+    password: '',
+    confirmPassword: '',
     phone: '',
     website: '',
     location: '',
@@ -28,6 +29,7 @@ export default function NGORegistration() {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   // Verification Checklist simulation
   const handleToggleDoc = (docKey: 'panUploaded' | 'g80Uploaded' | 'a12Uploaded' | 'fcraUploaded') => {
@@ -50,31 +52,48 @@ export default function NGORegistration() {
     if (currentStep > 1) setCurrentStep(prev => prev - 1);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    registerNgo({
-      name: formData.name,
-      regNumber: formData.regNumber,
-      email: formData.email,
-      phone: formData.phone,
-      website: formData.website,
-      location: formData.location,
-      mission: formData.mission,
-      description: formData.description,
-      category: formData.category,
-      logo: formData.logo,
-      coverImage: formData.coverImage,
-      panUploaded: formData.panUploaded,
-      g80Uploaded: formData.g80Uploaded,
-      a12Uploaded: formData.a12Uploaded,
-      fcraUploaded: formData.fcraUploaded
-    });
-    setSubmitted(true);
+    setSubmitError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setSubmitError('Passwords do not match.');
+      return;
+    }
+    if (formData.password.length < 8) {
+      setSubmitError('Password must be at least 8 characters.');
+      return;
+    }
+
+    try {
+      // Server-side atomic signup: creates auth user + Profile(NGO) + NgoRegistration + AuditLog.
+      // No client session needed — email verification is required, so none exists yet.
+      const result = await createNgoRegistration({
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        orgName: formData.name.trim(),
+        registrationNumber: formData.regNumber || undefined,
+        phone: formData.phone || undefined,
+        website: formData.website || undefined,
+        state: formData.location ? formData.location.split(',')[1]?.trim() : undefined,
+        city: formData.location ? formData.location.split(',')[0]?.trim() : undefined,
+        category: formData.category,
+        mission: formData.mission,
+      });
+
+      if (!result.success) {
+        setSubmitError(result.error || 'Registration failed. Please try again.');
+        return;
+      }
+
+      setSubmitted(true);
+    } catch {
+      setSubmitError('An unexpected error occurred. Please try again.');
+    }
   };
 
   const handleInstantVerify = () => {
-    // Log in as auditor directly to verify
-    setRole('admin');
+    // Dev shortcut: navigate to admin (requires admin session in real usage)
     navigate('/admin');
   };
 
@@ -166,6 +185,31 @@ export default function NGORegistration() {
                       required
                       placeholder="e.g. contact@organization.org"
                       value={formData.email}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:border-slate-950 focus:bg-white transition-all outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">Password *</label>
+                    <input
+                      type="password"
+                      name="password"
+                      required
+                      minLength={8}
+                      placeholder="Min 8 chars, 1 uppercase, 1 number, 1 special"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:border-slate-950 focus:bg-white transition-all outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">Confirm Password *</label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      required
+                      placeholder="Re-enter password"
+                      value={formData.confirmPassword}
                       onChange={handleChange}
                       className="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:border-slate-950 focus:bg-white transition-all outline-none"
                     />
@@ -426,6 +470,10 @@ export default function NGORegistration() {
               )}
             </div>
 
+            {submitError && (
+              <p className="text-[11px] text-red-600 font-medium mt-2">{submitError}</p>
+            )}
+
           </form>
 
         </div>
@@ -443,27 +491,21 @@ export default function NGORegistration() {
           <div className="space-y-2 max-w-md mx-auto">
             <h2 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">Application Submitted!</h2>
             <p className="text-xs text-slate-500 leading-relaxed font-medium">
-              Thank you for registering. We have added <span className="font-bold text-slate-800">"{formData.name}"</span> to our pending verification registry database.
+              Thank you for registering <span className="font-bold text-slate-800">"{formData.name}"</span>. Two things happen next:
             </p>
           </div>
 
-          <div className="p-5 bg-indigo-50/50 border border-indigo-100/50 rounded-2xl max-w-md mx-auto text-indigo-900 text-left space-y-3">
-            <div className="flex gap-2">
-              <ShieldCheck className="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-bold text-xs">Simulated Sandbox Shortcut</h4>
-                <p className="text-[10px] leading-relaxed text-indigo-700/90 mt-0.5 font-medium">
-                  Instead of waiting, you can immediately audit this application yourself. Log in as a Platform Auditor to verify these certificates and recalculate trust scores.
-                </p>
+          <div className="p-5 bg-amber-50/50 border border-amber-100/50 rounded-2xl max-w-md mx-auto text-amber-900 text-left space-y-3">
+            <div className="space-y-3 text-xs font-medium text-amber-800">
+              <div className="flex items-start gap-2">
+                <span className="font-bold text-amber-600 shrink-0">1.</span>
+                <p>Check <strong>{formData.email}</strong> — click the verification link we just sent to verify your email.</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="font-bold text-amber-600 shrink-0">2.</span>
+                <p>Our team will review your NGO registration. You'll be notified once approved. Your dashboard will unlock after approval.</p>
               </div>
             </div>
-            
-            <button
-              onClick={handleInstantVerify}
-              className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-all shadow-sm text-center"
-            >
-              Verify Application Instantly (Auditor Console)
-            </button>
           </div>
 
           <div className="pt-2">

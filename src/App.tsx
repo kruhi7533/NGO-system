@@ -1,8 +1,9 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AIAssistant from './components/AIAssistant';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Public pages
 import Home from './pages/public/Home';
@@ -49,16 +50,42 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
 
-            {/* Donor Portfolio Routing */}
-            <Route path="/donor" element={<DonorDashboard />} />
+            {/* Email verification and pending states */}
+            <Route path="/verify-email" element={
+              <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="max-w-md text-center p-8 bg-white rounded-2xl shadow-sm border border-gray-100">
+                  <div className="text-5xl mb-4">📧</div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify your email</h2>
+                  <p className="text-gray-500">Check your inbox and click the verification link to continue.</p>
+                </div>
+              </div>
+            } />
+            <Route path="/pending-approval" element={
+              <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="max-w-md text-center p-8 bg-white rounded-2xl shadow-sm border border-gray-100">
+                  <div className="text-5xl mb-4">⏳</div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Awaiting admin approval</h2>
+                  <p className="text-gray-500">Your NGO registration has been submitted. We'll notify you once it's reviewed.</p>
+                </div>
+              </div>
+            } />
 
-            {/* NGO Management Routing */}
-            <Route path="/ngo" element={<NGODashboard />} />
-            <Route path="/ngo/campaign-manager" element={<CampaignManager />} />
-            <Route path="/ngo/proof-upload" element={<ProofUploadCenter />} />
+            {/* Donor Portfolio Routing — protected */}
+            <Route element={<ProtectedRoute allowedRoles={['DONOR']} />}>
+              <Route path="/donor" element={<DonorDashboard />} />
+            </Route>
 
-            {/* Admin Audit Routing */}
-            <Route path="/admin" element={<AdminDashboard />} />
+            {/* NGO Management Routing — protected + must be VERIFIED */}
+            <Route element={<ProtectedRoute allowedRoles={['NGO']} />}>
+              <Route path="/ngo" element={<NGODashboard />} />
+              <Route path="/ngo/campaign-manager" element={<CampaignManager />} />
+              <Route path="/ngo/proof-upload" element={<ProofUploadCenter />} />
+            </Route>
+
+            {/* Admin Audit Routing — protected */}
+            <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+            </Route>
           </Routes>
         </main>
 

@@ -83,7 +83,7 @@ export default function CampaignDetails() {
   const handleTrackDonation = () => {
     setShowCheckout(false);
     setIsSuccess(false);
-    setRole('donor');
+    setRole('DONOR');
     navigate('/donor');
   };
 
