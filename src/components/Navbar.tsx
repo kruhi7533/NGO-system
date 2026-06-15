@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 export default function Navbar() {
-  const { currentRole, setRole, logout, notifications, markNotificationsAsRead } = useStore();
+  const { currentRole, logout, notifications, markNotificationsAsRead } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
