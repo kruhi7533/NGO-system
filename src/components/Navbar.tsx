@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import { 
-  Heart, 
-  Bell, 
-  Menu, 
-  X, 
-  ShieldCheck, 
-  User, 
-  LogOut,
-  Sparkles,
-  Inbox
+import {
+  Heart,
+  Bell,
+  Menu,
+  X,
+  LogOut
 } from 'lucide-react';
 
 export default function Navbar() {

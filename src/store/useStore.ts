@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type UserRole = 'donor' | 'ngo' | 'admin';
+export type UserRole = 'public' | 'donor' | 'ngo' | 'admin';
 
 export interface NGO {
   id: string;
